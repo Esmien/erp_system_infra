@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: erp_service_db
+    restart: always
+    ports:
+      - "${DB_PORT}:${DB_PORT}"
+    networks:
+      - erp_shared_network
+    shm_size: 1gb
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    command: postgres -c max_connections=500
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init/init-test-db.sh:/docker-entrypoint-initdb.d/init-test-db.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: always
+    env_file:
+      - ./.env
+    ports:
+      - "8081:8080"
+    networks:
+      - erp_shared_network
+    depends_on:
+      - db
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command: redis-server --appendonly yes # Включаем AOF для сохранения FSM и ключей
+    env_file:
+      - ./.env
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - erp_shared_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  erp_shared_network:
+    name: erp_shared_network
+    driver: bridge
