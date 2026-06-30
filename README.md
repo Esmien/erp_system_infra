@@ -11,13 +11,13 @@
 1. #### Клонировать репозиторий с инфраструктурой:
 
 ```BASH
-git clone https://github.com/Esmien/erp_system_infra.git erp_infra
+git clone https://github.com/Esmien/erp_system_infra.git
 ```
 
 2. #### Перейти в директорию инфраструктуры:
 
 ```BASH
-cd erp_infra
+cd erp_system_infra
 ```
 
 3. #### Создать .env-файл, отредактировать его и сохранить (Ctrl+O → Ctrl+X):
