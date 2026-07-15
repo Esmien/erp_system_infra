@@ -58,7 +58,7 @@ services:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
     networks:
       - erp_shared_network
 
@@ -67,7 +67,7 @@ services:
     container_name: loki
     restart: always
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT}:${LOKI_PORT}"
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - erp_shared_network
@@ -89,7 +89,7 @@ services:
     image: grafana/grafana:latest
     container_name: grafana
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
     depends_on:
       - prometheus
       - loki
@@ -98,6 +98,20 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-admin}
+    ports:
+      - "${RABBITMQ_PORT}:${RABBITMQ_PORT}"   # Порт для подключения бэкенда (AMQP)
+      - "${RABBITMQ_ADMIN_PORT}:${RABBITMQ_ADMIN_PORT}" # Порт веб-админки
+    networks:
+      - erp_shared_network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
 volumes:
   postgres_data:
@@ -105,6 +119,7 @@ volumes:
   prometheus_data:
   loki_data:
   grafana_data:
+  rabbitmq_data:
   erp_logs_volume:
     name: erp_logs_volume
 
