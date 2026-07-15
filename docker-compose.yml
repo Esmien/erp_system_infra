@@ -50,9 +50,63 @@ services:
     networks:
       - erp_shared_network
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: always
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - erp_shared_network
+
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: always
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - erp_shared_network
+    volumes:
+      - loki_data:/loki
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: always
+    volumes:
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - erp_logs_volume:/var/log/backend
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - erp_shared_network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - erp_shared_network
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+
 volumes:
   postgres_data:
   redis_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:
+  erp_logs_volume:
+    name: erp_logs_volume
 
 networks:
   erp_shared_network:
